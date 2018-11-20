@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
+    <title>Map Viewer</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.22/dijit/themes/tundra/tundra.css">
+    <link rel="stylesheet" href="//js.arcgis.com/3.22/esri/css/esri.css">
+    <link rel="stylesheet" type="text/css" href="Style.css">
+    <script src="//js.arcgis.com/3.22/init.js"></script>
+    <script>
+        var map;
+        require([
+            "esri/map",
+            "esri/dijit/Search",
+            "esri/dijit/LocateButton",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "dojo/text!./config.json",
+
+            "dojo/domReady!"
+
+        ], function (Map, Search, LocateButton, ArcGISDynamicMapServiceLayer, Config) {
+
+            //init variables
+            var vFtthServiceURL = "";
+            config = JSON.parse(Config);
+
+            initStats();
+            //Map init
+            map = new Map("map", {
+                basemap: "topo",
+                center: [44.5, 24.2],
+                zoom: 5
+            });
+
+            // Search Widget
+            var search = new Search({
+                map: map,
+                enableInfoWindow: false,
+                enableHighlight: false
+            }, "search");
+            search.sources[0].countryCode = "SAU";
+            search.startup();
+            map.on("load",
+                function (evt) {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(EnableLocateMeButton);
+                    } else {
+                        console.log("Geolocation is not supported by this browser.");
+                    }
+
+                    /// <summary>Creat the Locate Me button within map controls and listening to "locate" event.</summary>  
+                    /// <param name="" type=""></param>  
+                    /// <returns type="void"></returns> 
+                    function EnableLocateMeButton(position) {
+
+                        geoLocate = new LocateButton({
+                            map: map
+                        }, "LocateButton");
+
+                        geoLocate.startup();
+                        geoLocate.locate();
+                    }
+
+
+                    /// <summary>Initializes all controls to its default states. Reset the map, reset texts, clear graphics.</summary>  
+                    /// <param name="" type=""></param>  
+                    /// <returns type="void"></returns> 
+
+                  
+                })
+                
+                function initStats() {
+                        vFtthServiceURL = config.ftthServiceURL;
+                    }
+
+                    // Add operational Layers to the map
+                    // Add FTTH Layer
+                    var ftthLayerOptions = {
+                        "id": "ftthLayer",
+                        "showAttribution": false
+                    };
+                    var ftthLayer = new ArcGISDynamicMapServiceLayer(vFtthServiceURL, ftthLayerOptions);
+                    //ftthLayer.disableClientCaching = true;
+                    map.addLayer(ftthLayer);
+        });
+    </script>
+</head>
+
+<body>
+    <div id="map" class="map"></div>
+    <div id="search"></div>
+    <div id="LocateButton"></div>
+
+</body>
+
+</html>
